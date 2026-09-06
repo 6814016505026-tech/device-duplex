@@ -172,11 +172,11 @@
             resultArea.classList.add('active');
 
             try {
-                // ใช้ API Key จาก Google AI Studio
-                const apiKey = 'AQ.Ab8RN6LwzTz5HNTBAWjorIZ3EQLFFU3uoXhb1ECDWXF2ueb7VA'; 
+                // คีย์ใหม่ของคุณจากภาพล่าสุด
+                const apiKey = 'AQ.Ab8RN6KFPdQdRiBnEE5l8vrEkUZv4eK210XaLNqeTQdrAZRqUQ'; 
                 
-                // เปลี่ยนมาใช้โมเดล gemini-pro ซึ่งเป็นตัวมาตรฐานที่รองรับ 100% ทุกบัญชี
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+                // ใช้โมเดลตามคู่มือล่าสุด
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent`;
                 
                 const promptText = `คุณคือผู้เชี่ยวชาญด้านระบบเครือข่ายคอมพิวเตอร์ หน้าที่ของคุณคือการวิเคราะห์อุปกรณ์ที่ผู้ใช้พิมพ์มา ว่ามีการสื่อสารข้อมูลแบบใดระหว่าง Simplex (ทิศทางเดียว), Half-duplex (กึ่งสองทิศทาง) หรือ Full-duplex (สองทิศทาง) พร้อมทั้งอธิบายเหตุผลสั้นๆ เข้าใจง่าย หากผู้ใช้พิมพ์สิ่งที่ไม่ใช่อุปกรณ์สื่อสาร หรือเป็นคำถามทั่วไป ให้แจ้งว่าไม่พบข้อมูลหรือสิ่งนี้ไม่ใช่อุปกรณ์สื่อสาร
 
@@ -185,12 +185,12 @@
                 const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'X-goog-api-key': apiKey
                     },
                     body: JSON.stringify({
                         contents: [
                             { 
-                                role: "user",
                                 parts: [{ text: promptText }] 
                             }
                         ]
