@@ -1,3 +1,117 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ตรวจสอบประเภทการสื่อสารข้อมูล (Data Communication)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --pastel-yellow: #FFF3CD;
+            --pastel-orange: #FFD8A8;
+            --white: #FFFFFF;
+            --text-main: #495057;
+            --text-light: #868E96;
+            --shadow: rgba(0, 0, 0, 0.08);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Prompt', sans-serif;
+            background: linear-gradient(135deg, var(--pastel-yellow) 0%, var(--pastel-orange) 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: var(--white);
+            width: 100%;
+            max-width: 500px;
+            padding: 40px 30px;
+            border-radius: 24px;
+            box-shadow: 0 15px 35px var(--shadow);
+            text-align: center;
+        }
+
+        h1 { font-size: 1.5rem; color: #E8590C; margin-bottom: 10px; }
+        p.subtitle { font-size: 0.9rem; color: var(--text-light); margin-bottom: 25px; }
+
+        form { display: flex; flex-direction: column; gap: 15px; }
+
+        input[type="text"] {
+            width: 100%; padding: 15px; font-size: 1rem;
+            font-family: 'Prompt', sans-serif; border: 2px solid var(--pastel-yellow);
+            border-radius: 12px; outline: none; transition: border-color 0.3s ease;
+        }
+        input[type="text"]:focus { border-color: var(--pastel-orange); }
+
+        button {
+            background-color: var(--pastel-orange); color: #D9480F;
+            font-family: 'Prompt', sans-serif; font-weight: 600; font-size: 1rem;
+            padding: 15px; border: none; border-radius: 12px; cursor: pointer;
+            transition: transform 0.2s ease, background-color 0.2s ease;
+        }
+        button:hover { background-color: #FFC078; transform: translateY(-2px); }
+        button:active { transform: translateY(0); }
+
+        #resultArea {
+            margin-top: 25px; padding: 20px; border-radius: 16px;
+            background-color: #F8F9FA; display: none;
+            animation: fadeIn 0.4s ease-in-out; text-align: left;
+        }
+        #resultArea.active { display: block; }
+        .result-type { font-size: 1.3rem; font-weight: 600; margin-bottom: 8px; color: #2B8A3E; }
+        .result-desc { font-size: 0.95rem; line-height: 1.5; color: var(--text-main); }
+        .error { color: #FA5252; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>ระบบตรวจสอบประเภทการสื่อสาร</h1>
+        <p class="subtitle">พิมพ์ชื่ออุปกรณ์เครือข่าย เพื่อให้ AI วิเคราะห์ (Simplex, Half-duplex, Full-duplex)</p>
+
+        <form id="checkForm">
+            <input type="text" id="deviceInput" placeholder="เช่น วิทยุสื่อสาร, สวิตช์, เมาส์, โทรศัพท์..." autocomplete="off" required>
+            <button type="submit">วิเคราะห์อุปกรณ์</button>
+        </form>
+
+        <div id="resultArea"></div>
+    </div>
+
+    <script>
+        document.getElementById('checkForm').addEventListener('submit', async function (e) {
+            e.preventDefault(); 
+
+            const inputElement = document.getElementById('deviceInput');
+            const resultArea = document.getElementById('resultArea');
+            const submitButton = document.querySelector('button[type="submit"]');
+            let userInput = inputElement.value.trim();
+
+            if (userInput === "") return;
+
+            submitButton.disabled = true;
+            submitButton.textContent = "กำลังวิเคราะห์ด้วย AI...";
+            submitButton.style.backgroundColor = "#ccc";
+            submitButton.style.color = "#666";
+
+            resultArea.innerHTML = `
+                <div class="result-type" style="color: #495057;">กำลังประมวลผล...</div>
+                <div class="result-desc" style="color: #868E96;">AI กำลังคิดและวิเคราะห์ข้อมูล กรุณารอสักครู่</div>
+            `;
+            resultArea.classList.add('active');
+
             try {
                 // เรียกใช้ API Backend ของเราเอง (ที่รันบน Vercel)
                 const apiUrl = '/api/chat';
@@ -12,7 +126,31 @@
                 
                 const data = await response.json();
                 let aiResponse = data.answer || "ขออภัย ไม่สามารถสร้างคำตอบได้";
+                
+                // จัดหน้าตาข้อความที่ได้จาก AI
                 aiResponse = aiResponse.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
 
                 resultArea.innerHTML = `<div class="result-type">ผลการวิเคราะห์จาก AI:</div><div class="result-desc" style="margin-top: 10px;">${aiResponse}</div>`;
+            } catch (error) {
+                console.error(error);
+                resultArea.innerHTML = `
+                    <div class="result-type error" style="color: #FA5252;">❌ เกิดข้อผิดพลาด</div>
+                    <div class="result-desc">
+                        ไม่สามารถเชื่อมต่อกับ AI ได้<br>
+                        <small style="color: #888;">${error.message}</small>
+                    </div>
+                `;
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = "วิเคราะห์อุปกรณ์";
+                submitButton.style.backgroundColor = "";
+                submitButton.style.color = "";
+
+                resultArea.classList.remove('active');
+                void resultArea.offsetWidth;
+                resultArea.classList.add('active');
             }
+        });
+    </script>
+</body>
+</html>
