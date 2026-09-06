@@ -46,7 +46,6 @@
         h1 {
             font-size: 1.5rem;
             color: #E8590C;
-            /* เข้มขึ้นเล็กน้อยเพื่อให้อ่านง่าย */
             margin-bottom: 10px;
         }
 
@@ -105,7 +104,6 @@
             border-radius: 16px;
             background-color: #F8F9FA;
             display: none;
-            /* ซ่อนไว้ก่อน */
             animation: fadeIn 0.4s ease-in-out;
         }
 
@@ -134,7 +132,6 @@
                 opacity: 0;
                 transform: translateY(10px);
             }
-
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -146,7 +143,6 @@
             .container {
                 padding: 30px 20px;
             }
-
             h1 {
                 font-size: 1.3rem;
             }
@@ -157,18 +153,13 @@
 <body>
 
     <div class="container">
-        <h1>ระบบถาม-ตอบด้วย AI</h1>
-        <p class="subtitle">พิมพ์คำถามที่คุณอยากรู้ แล้วให้ AI ช่วยตอบ</p>
+        <h1>ระบบตรวจสอบประเภทการสื่อสาร</h1>
+        <p class="subtitle">พิมพ์ชื่ออุปกรณ์เครือข่าย เพื่อให้ AI วิเคราะห์ (Simplex, Half-duplex, Full-duplex)</p>
 
         <form id="checkForm">
-            <input type="text" id="deviceInput" placeholder="พิมพ์คำถามของคุณที่นี่..." autocomplete="off" required>
-            <button type="submit">ถาม AI</button>
+            <input type="text" id="deviceInput" placeholder="เช่น วิทยุสื่อสาร, สวิตช์, เมาส์, โทรศัพท์..." autocomplete="off" required>
+            <button type="submit">วิเคราะห์อุปกรณ์</button>
         </form>
-
-        <!-- กล่องสำหรับแจ้งเตือนให้ใส่ API Key -->
-        <div id="apiKeyWarning" style="margin-top: 15px; font-size: 0.85rem; color: #E8590C;">
-            * สำหรับนักพัฒนา: อย่าลืมใส่ Gemini API Key ในโค้ดก่อนใช้งานจริง
-        </div>
 
         <div id="resultArea">
             <!-- ผลลัพธ์จะแสดงที่นี่ผ่าน JavaScript -->
@@ -176,11 +167,8 @@
     </div>
 
     <script>
-        // ใส่ API Key ของคุณที่นี่
-        const API_KEY = "sk_lIY2xXc9lxL4DlSWC7rNuJtEL3lazwuGe69LLnr0LiJd9qTfbGSC8vaqvwJnQqsa";
-
         document.getElementById('checkForm').addEventListener('submit', async function (e) {
-            e.preventDefault(); // ป้องกันการรีเฟรชหน้าเว็บ
+            e.preventDefault(); 
 
             const inputElement = document.getElementById('deviceInput');
             const resultArea = document.getElementById('resultArea');
@@ -189,20 +177,9 @@
 
             if (userInput === "") return;
 
-            if (API_KEY === "YOUR_GEMINI_API_KEY_HERE") {
-                resultArea.innerHTML = `
-                    <div class="result-type error">⚠️ ยังไม่ได้ตั้งค่า API Key</div>
-                    <div class="result-desc">
-                        กรุณาเปิดไฟล์ \`index.html\` แล้วนำ Gemini API Key ของคุณมาใส่ในตัวแปร \`API_KEY\` ก่อนใช้งาน
-                    </div>
-                `;
-                resultArea.classList.add('active');
-                return;
-            }
-
             // เปลี่ยนสถานะปุ่มและแสดง Loading
             submitButton.disabled = true;
-            submitButton.textContent = "กำลังคิด...";
+            submitButton.textContent = "กำลังวิเคราะห์...";
             submitButton.style.backgroundColor = "#ccc";
             submitButton.style.color = "#666";
 
@@ -213,17 +190,23 @@
             resultArea.classList.add('active');
 
             try {
-                // เรียกใช้ ICCS Gen AI API (ผ่าน CORS Proxy เพื่อป้องกันปัญหา Failed to fetch บน Browser)
-                // หมายเหตุ: ใช้ corsproxy.io เป็นตัวกลางชั่วคราว
-                const response = await fetch(`https://corsproxy.io/?https://gen.ai.kku.ac.th/iccsacth/api/v1/chat/completions`, {
+                // สำหรับการโฮสต์บน GitHub Pages ต้องใช้ CORS Proxy เพื่อเลี่ยงปัญหาเบราว์เซอร์บล็อก
+                const apiKey = 'sk_lC6DpEEqWK8BEbbJfMY4fhnw3IcwN4hrlR7M31g1xiPP6kdcLfrJv4hveT6hYHmu'; 
+                const apiUrl = 'https://corsproxy.io/?https://gen.ai.kku.ac.th/iccsacth/api/v1/chat/completions';
+                
+                const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${API_KEY}`
+                        'Authorization': `Bearer ${apiKey}`
                     },
                     body: JSON.stringify({
-                        model: "gemini-3.1-pro-preview",
+                        model: "gemini-3.1-pro-preview", 
                         messages: [
+                            { 
+                                role: "system", 
+                                content: "คุณคือผู้เชี่ยวชาญด้านระบบเครือข่ายคอมพิวเตอร์ หน้าที่ของคุณคือการวิเคราะห์อุปกรณ์ที่ผู้ใช้พิมพ์มา ว่ามีการสื่อสารข้อมูลแบบใดระหว่าง Simplex (ทิศทางเดียว), Half-duplex (กึ่งสองทิศทาง) หรือ Full-duplex (สองทิศทาง) พร้อมทั้งอธิบายเหตุผลสั้นๆ เข้าใจง่าย หากผู้ใช้พิมพ์สิ่งที่ไม่ใช่อุปกรณ์สื่อสาร ให้แจ้งว่าไม่พบข้อมูลหรือสิ่งนี้ไม่ใช่อุปกรณ์สื่อสาร" 
+                            },
                             { role: "user", content: userInput }
                         ],
                         stream: false
@@ -231,25 +214,20 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error(`API Request failed with status ${response.status}`);
+                    throw new Error(`API Error: ${response.status}`);
                 }
 
                 const data = await response.json();
 
-                // ดึงข้อความตอบกลับจาก API
-                let aiResponse = "";
-                if (data.choices && data.choices.length > 0 && data.choices[0].message) {
-                    aiResponse = data.choices[0].message.content;
-                } else {
-                    aiResponse = "ขออภัย ไม่สามารถสร้างคำตอบได้ในขณะนี้";
-                }
+                // ดึงข้อความตอบกลับจาก API โดยตรง
+                let aiResponse = data.choices[0].message.content || "ขออภัย ไม่สามารถสร้างคำตอบได้ในขณะนี้";
 
-                // แปลง \n เป็น <br> เพื่อให้ขึ้นบรรทัดใหม่ใน HTML
-                aiResponse = aiResponse.replace(/\\n/g, '<br>');
+                // แปลง \n และขึ้นบรรทัดใหม่ใน HTML
+                aiResponse = aiResponse.replace(/\\n/g, '<br>').replace(/\n/g, '<br>');
 
                 // แสดงผลลัพธ์
                 resultArea.innerHTML = `
-                    <div class="result-type" style="color: #2B8A3E;">คำตอบจาก AI:</div>
+                    <div class="result-type" style="color: #2B8A3E;">ผลการวิเคราะห์:</div>
                     <div class="result-desc" style="text-align: left; margin-top: 10px;">
                         ${aiResponse}
                     </div>
@@ -259,14 +237,14 @@
                 resultArea.innerHTML = `
                     <div class="result-type error">❌ เกิดข้อผิดพลาด</div>
                     <div class="result-desc">
-                        ไม่สามารถเชื่อมต่อกับ AI ได้ กรุณาลองใหม่อีกครั้ง หรือตรวจสอบ API Key<br>
+                        ไม่สามารถเชื่อมต่อกับ AI API ได้ กรุณาลองใหม่อีกครั้ง<br>
                         <small style="color: #888;">${error.message}</small>
                     </div>
                 `;
             } finally {
                 // คืนค่าสถานะปุ่ม
                 submitButton.disabled = false;
-                submitButton.textContent = "ถาม AI";
+                submitButton.textContent = "วิเคราะห์อุปกรณ์";
                 submitButton.style.backgroundColor = "";
                 submitButton.style.color = "";
 
