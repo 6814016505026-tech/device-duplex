@@ -172,11 +172,9 @@
             resultArea.classList.add('active');
 
             try {
-                // คีย์ใหม่ของคุณจากภาพล่าสุด
+                // คีย์ทำงานได้แล้ว เราเปลี่ยนวิธีแนบคีย์ไปใน URL เพื่อความชัวร์
                 const apiKey = 'AQ.Ab8RN6KFPdQdRiBnEE5l8vrEkUZv4eK210XaLNqeTQdrAZRqUQ'; 
-                
-                // ใช้โมเดลตามคู่มือล่าสุด
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent`;
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
                 
                 const promptText = `คุณคือผู้เชี่ยวชาญด้านระบบเครือข่ายคอมพิวเตอร์ หน้าที่ของคุณคือการวิเคราะห์อุปกรณ์ที่ผู้ใช้พิมพ์มา ว่ามีการสื่อสารข้อมูลแบบใดระหว่าง Simplex (ทิศทางเดียว), Half-duplex (กึ่งสองทิศทาง) หรือ Full-duplex (สองทิศทาง) พร้อมทั้งอธิบายเหตุผลสั้นๆ เข้าใจง่าย หากผู้ใช้พิมพ์สิ่งที่ไม่ใช่อุปกรณ์สื่อสาร หรือเป็นคำถามทั่วไป ให้แจ้งว่าไม่พบข้อมูลหรือสิ่งนี้ไม่ใช่อุปกรณ์สื่อสาร
 
@@ -185,8 +183,7 @@
                 const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-goog-api-key': apiKey
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
                         contents: [
@@ -198,7 +195,9 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error(`Google API Error: ${response.status}`);
+                    const errorText = await response.text();
+                    console.error("API Error:", errorText);
+                    throw new Error(`Google API Error: ${response.status} (ถ้าระบุว่า 503 แปลว่าเซิร์ฟเวอร์ Google ทำงานหนัก ลองกดวิเคราะห์ใหม่อีกรอบนะครับ)`);
                 }
 
                 const data = await response.json();
