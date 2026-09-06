@@ -214,8 +214,9 @@
             resultArea.classList.add('active');
 
             try {
-                // เรียกใช้ ICCS Gen AI API (รูปแบบเดียวกับ OpenAI)
-                const response = await fetch(`https://gen.ai.kku.ac.th/iccsacth/api/v1/chat/completions`, {
+                // เรียกใช้ ICCS Gen AI API (ผ่าน CORS Proxy เพื่อป้องกันปัญหา Failed to fetch บน Browser)
+                // หมายเหตุ: ใช้ corsproxy.io เป็นตัวกลางชั่วคราว
+                const response = await fetch(`https://corsproxy.io/?https://gen.ai.kku.ac.th/iccsacth/api/v1/chat/completions`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
