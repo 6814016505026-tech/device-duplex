@@ -132,11 +132,6 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
-        @media (max-width: 480px) {
-            .container { padding: 30px 20px; }
-            h1 { font-size: 1.3rem; }
-        }
     </style>
 </head>
 
@@ -151,9 +146,7 @@
             <button type="submit">วิเคราะห์อุปกรณ์</button>
         </form>
 
-        <div id="resultArea">
-            <!-- ผลลัพธ์จะแสดงที่นี่ผ่าน JavaScript -->
-        </div>
+        <div id="resultArea"></div>
     </div>
 
     <script>
@@ -167,7 +160,6 @@
 
             if (userInput === "") return;
 
-            // เปลี่ยนสถานะปุ่มและแสดง Loading
             submitButton.disabled = true;
             submitButton.textContent = "กำลังวิเคราะห์ด้วย AI...";
             submitButton.style.backgroundColor = "#ccc";
@@ -180,21 +172,27 @@
             resultArea.classList.add('active');
 
             try {
-                // ใส่ API Key ของ Google เรียบร้อยแล้ว
+                // ใช้ API Key จาก Google AI Studio
                 const apiKey = 'AQ.Ab8RN6LwzTz5HNTBAWjorIZ3EQLFFU3uoXhb1ECDWXF2ueb7VA'; 
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
                 
+                // เปลี่ยนมาใช้โมเดล gemini-pro ซึ่งเป็นตัวมาตรฐานที่รองรับ 100% ทุกบัญชี
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+                
+                const promptText = `คุณคือผู้เชี่ยวชาญด้านระบบเครือข่ายคอมพิวเตอร์ หน้าที่ของคุณคือการวิเคราะห์อุปกรณ์ที่ผู้ใช้พิมพ์มา ว่ามีการสื่อสารข้อมูลแบบใดระหว่าง Simplex (ทิศทางเดียว), Half-duplex (กึ่งสองทิศทาง) หรือ Full-duplex (สองทิศทาง) พร้อมทั้งอธิบายเหตุผลสั้นๆ เข้าใจง่าย หากผู้ใช้พิมพ์สิ่งที่ไม่ใช่อุปกรณ์สื่อสาร หรือเป็นคำถามทั่วไป ให้แจ้งว่าไม่พบข้อมูลหรือสิ่งนี้ไม่ใช่อุปกรณ์สื่อสาร
+
+อุปกรณ์ที่ต้องการให้วิเคราะห์คือ: "${userInput}"`;
+
                 const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        systemInstruction: {
-                            parts: [{ text: "คุณคือผู้เชี่ยวชาญด้านระบบเครือข่ายคอมพิวเตอร์ หน้าที่ของคุณคือการวิเคราะห์อุปกรณ์ที่ผู้ใช้พิมพ์มา ว่ามีการสื่อสารข้อมูลแบบใดระหว่าง Simplex (ทิศทางเดียว), Half-duplex (กึ่งสองทิศทาง) หรือ Full-duplex (สองทิศทาง) พร้อมทั้งอธิบายเหตุผลสั้นๆ เข้าใจง่าย หากผู้ใช้พิมพ์สิ่งที่ไม่ใช่อุปกรณ์สื่อสาร หรือเป็นคำถามทั่วไป ให้แจ้งว่าไม่พบข้อมูลหรือสิ่งนี้ไม่ใช่อุปกรณ์สื่อสาร" }]
-                        },
                         contents: [
-                            { parts: [{ text: userInput }] }
+                            { 
+                                role: "user",
+                                parts: [{ text: promptText }] 
+                            }
                         ]
                     })
                 });
@@ -205,14 +203,12 @@
 
                 const data = await response.json();
 
-                // ดึงข้อความตอบกลับจากโครงสร้างของ Google API
                 let aiResponse = data.candidates[0].content.parts[0].text || "ขออภัย ไม่สามารถสร้างคำตอบได้ในขณะนี้";
 
                 // แปลง Markdown ตัวหนา (**) เป็น HTML <b> และแปลงขึ้นบรรทัดใหม่
                 aiResponse = aiResponse.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
                 aiResponse = aiResponse.replace(/\n/g, '<br>');
 
-                // แสดงผลลัพธ์
                 resultArea.innerHTML = `
                     <div class="result-type">ผลการวิเคราะห์จาก AI:</div>
                     <div class="result-desc" style="margin-top: 10px;">
@@ -229,13 +225,11 @@
                     </div>
                 `;
             } finally {
-                // คืนค่าสถานะปุ่ม
                 submitButton.disabled = false;
                 submitButton.textContent = "วิเคราะห์อุปกรณ์";
                 submitButton.style.backgroundColor = "";
                 submitButton.style.color = "";
 
-                // Animation
                 resultArea.classList.remove('active');
                 void resultArea.offsetWidth;
                 resultArea.classList.add('active');
