@@ -161,8 +161,7 @@
         <p class="subtitle">พิมพ์คำถามที่คุณอยากรู้ แล้วให้ AI ช่วยตอบ</p>
 
         <form id="checkForm">
-            <input type="text" id="deviceInput" placeholder="พิมพ์คำถามของคุณที่นี่..."
-                autocomplete="off" required>
+            <input type="text" id="deviceInput" placeholder="พิมพ์คำถามของคุณที่นี่..." autocomplete="off" required>
             <button type="submit">ถาม AI</button>
         </form>
 
@@ -178,7 +177,7 @@
 
     <script>
         // ใส่ API Key ของคุณที่นี่
-        const API_KEY = "sk_w9v0uGzSLqJfmUMKLREL4PNz2JaSGV5NR8KAloG25azapeJFaAJ31fA3RQv67B45"; 
+        const API_KEY = "sk_lIY2xXc9lxL4DlSWC7rNuJtEL3lazwuGe69LLnr0LiJd9qTfbGSC8vaqvwJnQqsa";
 
         document.getElementById('checkForm').addEventListener('submit', async function (e) {
             e.preventDefault(); // ป้องกันการรีเฟรชหน้าเว็บ
@@ -206,7 +205,7 @@
             submitButton.textContent = "กำลังคิด...";
             submitButton.style.backgroundColor = "#ccc";
             submitButton.style.color = "#666";
-            
+
             resultArea.innerHTML = `
                 <div class="result-type" style="color: #495057;">กำลังประมวลผล...</div>
                 <div class="result-desc" style="color: #868E96;">AI กำลังค้นหาคำตอบให้กับคุณ กรุณารอสักครู่</div>
@@ -236,7 +235,7 @@
                 }
 
                 const data = await response.json();
-                
+
                 // ดึงข้อความตอบกลับจาก API
                 let aiResponse = "";
                 if (data.choices && data.choices.length > 0 && data.choices[0].message) {
@@ -270,10 +269,10 @@
                 submitButton.textContent = "ถาม AI";
                 submitButton.style.backgroundColor = "";
                 submitButton.style.color = "";
-                
+
                 // Trigger reflow เพื่อให้ Animation เล่นใหม่ (ถ้ามี)
                 resultArea.classList.remove('active');
-                void resultArea.offsetWidth; 
+                void resultArea.offsetWidth;
                 resultArea.classList.add('active');
             }
         });
