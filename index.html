@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="th">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -94,10 +93,6 @@
             transform: translateY(-2px);
         }
 
-        button:active {
-            transform: translateY(0);
-        }
-
         #resultArea {
             margin-top: 25px;
             padding: 20px;
@@ -105,6 +100,7 @@
             background-color: #F8F9FA;
             display: none;
             animation: fadeIn 0.4s ease-in-out;
+            text-align: left;
         }
 
         #resultArea.active {
@@ -115,6 +111,7 @@
             font-size: 1.3rem;
             font-weight: 600;
             margin-bottom: 8px;
+            color: #2B8A3E;
         }
 
         .result-desc {
@@ -123,138 +120,90 @@
             color: var(--text-main);
         }
 
-        .error {
-            color: #FA5252;
-        }
-
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Responsive Design */
-        @media (max-width: 480px) {
-            .container {
-                padding: 30px 20px;
-            }
-            h1 {
-                font-size: 1.3rem;
-            }
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
-
 <body>
 
     <div class="container">
         <h1>ระบบตรวจสอบประเภทการสื่อสาร</h1>
-        <p class="subtitle">พิมพ์ชื่ออุปกรณ์เครือข่าย เพื่อให้ AI วิเคราะห์ (Simplex, Half-duplex, Full-duplex)</p>
+        <p class="subtitle">ตรวจสอบอุปกรณ์เครือข่าย (Simplex, Half-duplex, Full-duplex)</p>
 
         <form id="checkForm">
             <input type="text" id="deviceInput" placeholder="เช่น วิทยุสื่อสาร, สวิตช์, เมาส์, โทรศัพท์..." autocomplete="off" required>
             <button type="submit">วิเคราะห์อุปกรณ์</button>
         </form>
 
-        <div id="resultArea">
-            <!-- ผลลัพธ์จะแสดงที่นี่ผ่าน JavaScript -->
-        </div>
+        <div id="resultArea"></div>
     </div>
 
     <script>
-        document.getElementById('checkForm').addEventListener('submit', async function (e) {
+        // --- ฐานข้อมูลจำลอง (Local Database) ---
+        const database = {
+            simplex: [
+                "คีย์บอร์ด", "keyboard", "เมาส์", "mouse", "จอภาพ", "monitor", "จอคอม", "ปริ้นเตอร์", "printer", "เครื่องพิมพ์",
+                "วิทยุ", "radio", "ทีวี", "tv", "television", "โทรทัศน์", "กล้องวงจรปิด", "cctv", "เซนเซอร์", "sensor",
+                "ลำโพง", "speaker", "ไมโครโฟน", "microphone", "ไมค์", "เครื่องสแกน", "scanner", "รีโมท", "remote",
+                "บาร์โค้ด", "barcode", "โปรเจคเตอร์", "projector", "ไฟจราจร", "สัญญาณเตือนไฟไหม้", "fire alarm", "จีพีเอส", "gps",
+                "เพจเจอร์", "pager", "webcam", "กล้องเว็บแคม", "rfid", "บัตรคีย์การ์ด", "เครื่องรูดบัตร", "คีย์แพด", "keypad"
+            ],
+            halfDuplex: [
+                "วิทยุสื่อสาร", "walkie-talkie", "วอ", "แฟกซ์", "fax", "เครื่องส่งแฟกซ์", "ฮับ", "hub", "บลูทูธ", "bluetooth",
+                "wi-fi", "wifi", "ไวไฟ", "สายแลนแบบเก่า", "cb radio", "วิทยุตำรวจ", "วิทยุสมัครเล่น", "ham radio", "usb",
+                "เครื่องส่งโทรเลข", "telegraph", "เครื่องอ่านสมาร์ทการ์ด", "smart card reader", "nfc", "อินฟราเรด", "infrared"
+            ],
+            fullDuplex: [
+                "โทรศัพท์", "telephone", "โทรศัพท์บ้าน", "สมาร์ทโฟน", "smartphone", "มือถือ", "โทรศัพท์มือถือ",
+                "สวิตช์", "switch", "เราเตอร์", "router", "สายแลน", "lan", "ethernet", "ไฟเบอร์ออปติก", "fiber optic",
+                "โมเด็ม", "modem", "วิดีโอคอล", "video call", "skype", "discord", "zoom", "สายโทรศัพท์", "คอมพิวเตอร์", "computer",
+                "โน้ตบุ๊ก", "notebook", "laptop", "เซิร์ฟเวอร์", "server", "ดาวเทียมแบบสองทาง", "5g", "4g", "LTE"
+            ]
+        };
+
+        const explanations = {
+            simplex: "เป็นแบบ **Simplex (ทิศทางเดียว)**<br><br><b>เหตุผล:</b> ข้อมูลสามารถส่งไปได้เพียงทิศทางเดียวเท่านั้น ผู้ส่งจะเป็นผู้ส่งเสมอ และผู้รับก็จะเป็นผู้รับเสมอ ไม่สามารถโต้ตอบกลับได้",
+            halfDuplex: "เป็นแบบ **Half-duplex (กึ่งสองทิศทาง)**<br><br><b>เหตุผล:</b> ข้อมูลสามารถส่งและรับได้ทั้งสองทิศทาง แต่ไม่สามารถทำในเวลาเดียวกันได้ ต้องสลับกันส่งและรับ (ผลัดกันพูด)",
+            fullDuplex: "เป็นแบบ **Full-duplex (สองทิศทาง)**<br><br><b>เหตุผล:</b> ข้อมูลสามารถส่งและรับได้ทั้งสองทิศทางในเวลาเดียวกัน ทำให้สามารถสื่อสารโต้ตอบกันได้อย่างต่อเนื่องทันทีโดยไม่ต้องรอ"
+        };
+
+        document.getElementById('checkForm').addEventListener('submit', function (e) {
             e.preventDefault(); 
-
-            const inputElement = document.getElementById('deviceInput');
+            const input = document.getElementById('deviceInput').value.trim().toLowerCase();
             const resultArea = document.getElementById('resultArea');
-            const submitButton = document.querySelector('button[type="submit"]');
-            let userInput = inputElement.value.trim();
+            
+            if (input === "") return;
 
-            if (userInput === "") return;
+            let resultType = "";
+            let resultDesc = "";
 
-            // เปลี่ยนสถานะปุ่มและแสดง Loading
-            submitButton.disabled = true;
-            submitButton.textContent = "กำลังวิเคราะห์...";
-            submitButton.style.backgroundColor = "#ccc";
-            submitButton.style.color = "#666";
+            // ค้นหาในฐานข้อมูล
+            if (database.simplex.some(d => input.includes(d))) {
+                resultType = "ผลการวิเคราะห์:";
+                resultDesc = `อุปกรณ์ "${input}" ${explanations.simplex}`;
+            } else if (database.halfDuplex.some(d => input.includes(d))) {
+                resultType = "ผลการวิเคราะห์:";
+                resultDesc = `อุปกรณ์ "${input}" ${explanations.halfDuplex}`;
+            } else if (database.fullDuplex.some(d => input.includes(d))) {
+                resultType = "ผลการวิเคราะห์:";
+                resultDesc = `อุปกรณ์ "${input}" ${explanations.fullDuplex}`;
+            } else {
+                resultType = "ไม่พบข้อมูล 😅";
+                resultDesc = `ขออภัย ไม่พบ "${input}" ในฐานข้อมูลของเรา หรือสิ่งนี้อาจไม่ใช่อุปกรณ์เครือข่าย/อุปกรณ์สื่อสาร ลองพิมพ์คำอื่นดูนะครับ`;
+                resultArea.querySelector('.result-type').style.color = "#E8590C";
+            }
 
             resultArea.innerHTML = `
-                <div class="result-type" style="color: #495057;">กำลังประมวลผล...</div>
-                <div class="result-desc" style="color: #868E96;">AI กำลังค้นหาคำตอบให้กับคุณ กรุณารอสักครู่</div>
+                <div class="result-type">${resultType}</div>
+                <div class="result-desc">${resultDesc}</div>
             `;
+            
+            resultArea.classList.remove('active');
+            void resultArea.offsetWidth;
             resultArea.classList.add('active');
-
-            try {
-                // สำหรับการโฮสต์บน GitHub Pages ต้องใช้ CORS Proxy เพื่อเลี่ยงปัญหาเบราว์เซอร์บล็อก
-                const apiKey = 'sk_lC6DpEEqWK8BEbbJfMY4fhnw3IcwN4hrlR7M31g1xiPP6kdcLfrJv4hveT6hYHmu'; 
-                const apiUrl = 'https://corsproxy.io/?https://gen.ai.kku.ac.th/iccsacth/api/v1/chat/completions';
-                
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${apiKey}`
-                    },
-                    body: JSON.stringify({
-                        model: "gemini-3.1-pro-preview", 
-                        messages: [
-                            { 
-                                role: "system", 
-                                content: "คุณคือผู้เชี่ยวชาญด้านระบบเครือข่ายคอมพิวเตอร์ หน้าที่ของคุณคือการวิเคราะห์อุปกรณ์ที่ผู้ใช้พิมพ์มา ว่ามีการสื่อสารข้อมูลแบบใดระหว่าง Simplex (ทิศทางเดียว), Half-duplex (กึ่งสองทิศทาง) หรือ Full-duplex (สองทิศทาง) พร้อมทั้งอธิบายเหตุผลสั้นๆ เข้าใจง่าย หากผู้ใช้พิมพ์สิ่งที่ไม่ใช่อุปกรณ์สื่อสาร ให้แจ้งว่าไม่พบข้อมูลหรือสิ่งนี้ไม่ใช่อุปกรณ์สื่อสาร" 
-                            },
-                            { role: "user", content: userInput }
-                        ],
-                        stream: false
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`API Error: ${response.status}`);
-                }
-
-                const data = await response.json();
-
-                // ดึงข้อความตอบกลับจาก API โดยตรง
-                let aiResponse = data.choices[0].message.content || "ขออภัย ไม่สามารถสร้างคำตอบได้ในขณะนี้";
-
-                // แปลง \n และขึ้นบรรทัดใหม่ใน HTML
-                aiResponse = aiResponse.replace(/\\n/g, '<br>').replace(/\n/g, '<br>');
-
-                // แสดงผลลัพธ์
-                resultArea.innerHTML = `
-                    <div class="result-type" style="color: #2B8A3E;">ผลการวิเคราะห์:</div>
-                    <div class="result-desc" style="text-align: left; margin-top: 10px;">
-                        ${aiResponse}
-                    </div>
-                `;
-            } catch (error) {
-                console.error(error);
-                resultArea.innerHTML = `
-                    <div class="result-type error">❌ เกิดข้อผิดพลาด</div>
-                    <div class="result-desc">
-                        ไม่สามารถเชื่อมต่อกับ AI API ได้ กรุณาลองใหม่อีกครั้ง<br>
-                        <small style="color: #888;">${error.message}</small>
-                    </div>
-                `;
-            } finally {
-                // คืนค่าสถานะปุ่ม
-                submitButton.disabled = false;
-                submitButton.textContent = "วิเคราะห์อุปกรณ์";
-                submitButton.style.backgroundColor = "";
-                submitButton.style.color = "";
-
-                // Trigger reflow เพื่อให้ Animation เล่นใหม่ (ถ้ามี)
-                resultArea.classList.remove('active');
-                void resultArea.offsetWidth;
-                resultArea.classList.add('active');
-            }
         });
     </script>
 </body>
-
 </html>
