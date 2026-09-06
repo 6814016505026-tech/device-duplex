@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ตรวจสอบประเภทการสื่อสารข้อมูล (Data Communication)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --pastel-yellow: #FFF3CD;
+            --pastel-orange: #FFD8A8;
+            --white: #FFFFFF;
+            --text-main: #495057;
+            --text-light: #868E96;
+            --shadow: rgba(0, 0, 0, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Prompt', sans-serif;
+            background: linear-gradient(135deg, var(--pastel-yellow) 0%, var(--pastel-orange) 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: var(--white);
+            width: 100%;
+            max-width: 500px;
+            padding: 40px 30px;
+            border-radius: 24px;
+            box-shadow: 0 15px 35px var(--shadow);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            color: #E8590C;
+            /* เข้มขึ้นเล็กน้อยเพื่อให้อ่านง่าย */
+            margin-bottom: 10px;
+        }
+
+        p.subtitle {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-bottom: 25px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            font-size: 1rem;
+            font-family: 'Prompt', sans-serif;
+            border: 2px solid var(--pastel-yellow);
+            border-radius: 12px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--pastel-orange);
+        }
+
+        button {
+            background-color: var(--pastel-orange);
+            color: #D9480F;
+            font-family: 'Prompt', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.2s ease, background-color 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #FFC078;
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        #resultArea {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 16px;
+            background-color: #F8F9FA;
+            display: none;
+            /* ซ่อนไว้ก่อน */
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        #resultArea.active {
+            display: block;
+        }
+
+        .result-type {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .result-desc {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: var(--text-main);
+        }
+
+        .error {
+            color: #FA5252;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>ตรวจสอบประเภทการสื่อสาร</h1>
+        <p class="subtitle">เช็กว่าอุปกรณ์เครือข่ายนี้สื่อสารแบบใด</p>
+
+        <form id="checkForm">
+            <input type="text" id="deviceInput" placeholder="พิมพ์ชื่ออุปกรณ์ เช่น เราเตอร์, เมาส์, Wi-Fi..."
+                autocomplete="off" required>
+            <button type="submit">ตรวจสอบข้อมูล</button>
+        </form>
+
+        <div id="resultArea">
+            <!-- ผลลัพธ์จะแสดงที่นี่ผ่าน JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        // 1. ฐานข้อมูลอุปกรณ์ (จัดหมวดหมู่และคำพ้องความหมาย)
+        const communicationDatabase = [
+            {
+                type: "Simplex (ทิศทางเดียว)",
+                color: "#F59F00",
+                description: "อุปกรณ์นี้สื่อสารแบบทิศทางเดียว คือเป็นผู้ส่งหรือผู้รับเพียงอย่างเดียวเท่านั้น ไม่สามารถโต้ตอบกลับในช่องทางเดียวกันได้",
+                keywords: [
+                    "คีย์บอร์ด", "keyboard", "แป้นพิมพ์",
+                    "เมาส์", "mouse",
+                    "จอภาพ", "จอคอม", "monitor", "display", "screen",
+                    "ปริ้นเตอร์", "printer", "เครื่องพิมพ์",
+                    "วิทยุ", "radio", "วิทยุกระจายเสียง", "fm", "am",
+                    "ทีวี", "โทรทัศน์", "tv", "television",
+                    "กล้องวงจรปิด", "cctv", "camera", "กล้อง",
+                    "เซนเซอร์", "sensor",
+                    "ลำโพง", "speaker", "เครื่องกระจายเสียง"
+                ]
+            },
+            {
+                type: "Half-duplex (กึ่งสองทิศทาง)",
+                color: "#E8590C",
+                description: "อุปกรณ์นี้สื่อสารได้ทั้งสองทิศทาง แต่ต้อง 'สลับกันส่งและรับ' ไม่สามารถส่งและรับข้อมูลในเวลาเดียวกันได้",
+                keywords: [
+                    "วิทยุสื่อสาร", "walkie-talkie", "วอ", "วอสื่อสาร",
+                    "แฟกซ์", "เครื่องแฟกซ์", "fax",
+                    "wi-fi", "wifi", "ไวไฟ", "wlan",
+                    "ฮับ", "hub", "network hub",
+                    "บลูทูธ", "bluetooth",
+                    "usb"
+                ]
+            },
+            {
+                type: "Full-duplex (สองทิศทาง)",
+                color: "#2B8A3E",
+                description: "อุปกรณ์นี้สื่อสารได้สองทิศทาง 'พร้อมกัน' สามารถส่งและรับข้อมูลโต้ตอบกันได้อย่างต่อเนื่องในเวลาเดียวกัน",
+                keywords: [
+                    "โทรศัพท์", "telephone", "โทรศัพท์บ้าน",
+                    "สมาร์ทโฟน", "smartphone", "มือถือ", "โทรศัพท์มือถือ", "mobile",
+                    "สวิตช์", "switch", "network switch",
+                    "เราเตอร์", "router", "เร้าเตอร์",
+                    "สายแลน", "lan", "สาย lan", "ethernet",
+                    "ไฟเบอร์ออปติก", "fiber optic", "fiber", "ใยแก้วนำแสง",
+                    "คอมพิวเตอร์", "computer", "pc", "notebook", "laptop"
+                ]
+            }
+        ];
+
+        // เพื่อป้องกันปัญหาผู้ใช้พิมพ์คำยาวๆ แล้วมีคำซ้อนกัน (เช่น พิมพ์ "วิทยุสื่อสาร" แต่ไปตรงกับ "วิทยุ" ใน Simplex)
+        // เราจะสร้าง Flat List และเรียงลำดับคำค้นหาจาก "ยาวไปสั้น"
+        let searchIndex = [];
+        communicationDatabase.forEach(category => {
+            category.keywords.forEach(keyword => {
+                searchIndex.push({
+                    keyword: keyword.toLowerCase(),
+                    category: category
+                });
+            });
+        });
+        // เรียงตัวอักษรยาวไปสั้น
+        searchIndex.sort((a, b) => b.keyword.length - a.keyword.length);
+
+
+        // 2. ฟังก์ชันการทำงานเมื่อกดปุ่ม Submit
+        document.getElementById('checkForm').addEventListener('submit', function (e) {
+            e.preventDefault(); // ป้องกันการรีเฟรชหน้าเว็บ
+
+            const inputElement = document.getElementById('deviceInput');
+            const resultArea = document.getElementById('resultArea');
+            let userInput = inputElement.value.trim().toLowerCase();
+
+            if (userInput === "") return;
+
+            let foundCategory = null;
+
+            // ค้นหาในฐานข้อมูล
+            for (let i = 0; i < searchIndex.length; i++) {
+                // เช็กว่าข้อความที่ผู้ใช้พิมพ์ มีคำในฐานข้อมูลอยู่ในนั้นหรือไม่
+                // หรือคำในฐานข้อมูลตรงกับที่ผู้ใช้พิมพ์เป๊ะๆ
+                if (userInput.includes(searchIndex[i].keyword)) {
+                    foundCategory = searchIndex[i].category;
+                    break;
+                }
+            }
+
+            // 3. แสดงผลลัพธ์
+            if (foundCategory) {
+                resultArea.innerHTML = `
+                    <div class="result-type" style="color: ${foundCategory.color};">
+                        ${foundCategory.type}
+                    </div>
+                    <div class="result-desc">
+                        ${foundCategory.description}
+                    </div>
+                `;
+            } else {
+                resultArea.innerHTML = `
+                    <div class="result-type error">ไม่พบข้อมูลอุปกรณ์</div>
+                    <div class="result-desc">
+                        ขออภัย ระบบไม่พบประเภทการสื่อสารของ <b>"${inputElement.value}"</b> <br>กรุณาลองพิมพ์ชื่ออุปกรณ์อื่น (เช่น คีย์บอร์ด, ฮับ, สายแลน)
+                    </div>
+                `;
+            }
+
+            // แสดงกล่องผลลัพธ์พร้อม Animation
+            resultArea.classList.remove('active');
+            void resultArea.offsetWidth; // Trigger reflow เพื่อให้ Animation เล่นใหม่ทุกรอบที่กด
+            resultArea.classList.add('active');
+        });
+    </script>
+</body>
+
+</html>
